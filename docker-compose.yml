@@ -1,0 +1,173 @@
+# docker-compose.yml - Only for local debug purposes
+# docker-compose up -d elasticsearch kibana jaeger camunda redis mongo mysql postgres pgadmin
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:13
+    container_name: local-postgres
+    restart: always
+    ports:
+      - '5432:5432'
+    environment:
+      TZ: 'America/Argentina/Buenos_Aires'
+      POSTGRES_DB: my_db
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: 123456
+    #logging:
+    #  driver: none
+    #volumes:
+    #  - ./.postgres_data:/var/lib/postgresql/data
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: local-pgadmin
+    restart: always
+    ports:
+      - '5050:80'
+    environment:
+      TZ: 'America/Argentina/Buenos_Aires'
+      PGADMIN_DEFAULT_EMAIL: root@admin.com
+      PGADMIN_DEFAULT_PASSWORD: root
+
+  mysql:
+    image: mysql:5.7
+    container_name: local-mysql
+    restart: always
+    ports:
+      - '3306:3306'
+    environment:
+      TZ: 'America/Argentina/Buenos_Aires'
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_DATABASE: my_db
+      MYSQL_PASSWORD: 123456
+      #MYSQL_USER: root
+    #volumes:
+    #  - ./.mysql-data/db:/var/lib/mysql
+
+  mongo:
+    image: mongo:5.0
+    container_name: local-mongo
+    restart: always
+    ports:
+      - '27017:27017'
+    environment:
+      TZ: 'America/Argentina/Buenos_Aires'
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: 123456
+      MONGO_INITDB_DATABASE: test_db
+    #logging:
+    #  driver: none
+    #volumes:
+    #  - ./.mongo_data:/data/db
+
+  redis:
+    image: redis:6.2-alpine
+    container_name: local-redis
+    restart: always
+    ports:
+      - '6379:6379'
+    environment:
+      TZ: 'America/Argentina/Buenos_Aires'
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: 123456
+      REDIS_HOST: cache
+      #REDIS_USERNAME: default
+    command: [ "redis-server", "--appendonly", "yes", "--requirepass","123456" ]
+    #logging:
+    #  driver: none
+    #volumes:
+    #  - ./.redis_data:/data
+
+  authorizer:
+    image: lakhansamani/authorizer:1.3.6
+    container_name: local-authorizer
+    restart: always
+    ports:
+      - '3001:3001'
+    environment:
+      ENV: 'development'
+      ADMIN_SECRET: 'admin'
+      PORT: 3001
+      DATABASE_TYPE: postgres
+      DATABASE_URL: postgres://root:123456@postgres:5432/my_db
+      REDIS_URL: redis://:123456@redis:6379
+      CUSTOM_ACCESS_TOKEN_SCRIPT: function(user,tokenPayload){var data=tokenPayload;data.user=user;return data;}
+    depends_on:
+      - postgres
+      - redis
+
+  camunda:
+    image: camunda/camunda-bpm-platform:run-latest
+    container_name: local-camunda
+    restart: always
+    ports:
+      - '8443:8080'
+    environment:
+      TZ: 'America/Argentina/Buenos_Aires'
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.8.1
+    container_name: local-elasticsearch
+    restart: always
+    ports:
+      - '9200:9200'
+    environment:
+      - TZ=UTC
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+      - xpack.security.enabled=false
+      - ELASTIC_PASSWORD=elastic
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    cap_add:
+      - IPC_LOCK
+    #volumes:
+    #  - ./.elasticsearch-data:/usr/share/elasticsearch/data
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.8.1
+    container_name: local-kibana
+    restart: always
+    ports:
+      - '5601:5601'
+    environment:
+      TZ: 'America/Argentina/Buenos_Aires'
+      SERVER_NAME: kibana
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+    depends_on:
+      - elasticsearch
+
+  jaeger:
+    container_name: local-jaeger
+    image: jaegertracing/all-in-one:latest
+    restart: always
+    ports:
+      - '6831:6831/udp'
+      - '6832:6832/udp'
+      - '5778:5778'
+      - '16686:16686'
+      - '4317:4317'
+      - '4318:4318'
+      - '14250:14250'
+      - '14268:14268'
+      - '14269:14269'
+      - '9411:9411'
+    environment:
+      TZ: 'America/Argentina/Buenos_Aires'
+      COLLECTOR_OTLP_ENABLED: 'true'
+      #LOG_LEVEL: debug
+
+  grafana:
+    container_name: local-grafana
+    image: grafana/grafana:latest
+    restart: always
+    ports:
+      - '3000:3000'
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
