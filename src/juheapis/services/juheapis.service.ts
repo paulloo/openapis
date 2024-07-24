@@ -5,13 +5,18 @@ import { AxiosResponse } from 'axios';
 import { readFileSync } from 'fs';
 import { ParamWeather, ParamPets, ParamAnimalDetect } from '../dtos/juheapi.dto';
 import { config } from '../../config';
+import { google } from 'googleapis';
+
+import speech from '@google-cloud/speech';
+
 
 @Injectable()
 export class JuheapisService {
   constructor(
     @Inject(config.KEY) private readonly appConfig: ConfigType<typeof config>,
     private readonly httpClient: HttpClientService,
-  ) {}
+  ) {
+  }
 
   async getWeather(params?: ParamWeather): Promise<AxiosResponse> {
     try {

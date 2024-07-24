@@ -19,6 +19,8 @@ import { AppService } from './app.service';
 
 import { config, environments, validationSchema } from './config';
 import { JuheapisModule } from './juheapis/juheapis.module';
+import { GoogleapisModule } from './googleapis/googleapis.module';
+import { QiniuapisModule } from './qiniuapis/qiniuapis.module';
 
 @Module({
   imports: [
@@ -36,7 +38,9 @@ import { JuheapisModule } from './juheapis/juheapis.module';
     UtilsModule,
     CharactersModule,
     UsersModule,
-    JuheapisModule
+    GoogleapisModule,
+    JuheapisModule,
+    QiniuapisModule
   ],
   controllers: [AppController],
   providers: [

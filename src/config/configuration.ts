@@ -1,4 +1,4 @@
-import { getSkipHealthChecks, Typings } from '@tresdoce-nestjs-toolkit/paas';
+import { getSkipHealthChecks, type Typings } from '@tresdoce-nestjs-toolkit/paas';
 import { registerAs } from '@nestjs/config';
 
 import * as PACKAGE_JSON from '../../package.json';
@@ -67,8 +67,21 @@ export default registerAs(
         weatherAppKey: process.env.JUHE_APP_KEY_WEATHER,
         petsAppKey: process.env.JUHE_APP_KEY_WPETS,
         animalDetectAppKey: process.env.JUHE_APP_KEY_ANIMAL_DETECT,
-        
-      }
+      },
+      googleApi: {
+        url: process.env.GOOGLE_API_URL,
+        timeout: 3000,
+        healthPath: process.env.GOOGLE_API_URL_LIVENESS,
+      },
+      qiniuApi: {
+        url: process.env.QINIU_API_URL,
+        ak: process.env.QINIU_ACCESS_KEY,
+        sk: process.env.QINIU_SECRET_KEY,
+        cdn: process.env.QINIU_CDN_DOMAIN,
+        timeout: 3000,
+        bucketName: process.env.QINIU_BUCKET_NAME,
+        healthPath: process.env.QINIU_API_URL_LIVENESS,
+      },
     },
   }),
 );
